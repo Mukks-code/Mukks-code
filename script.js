@@ -3,7 +3,7 @@
 // Frontend form logic + API communication
 // ========================================
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "/api";
 
 // ── Role Selection Popup ────────────────
 function selectRole(role) {
