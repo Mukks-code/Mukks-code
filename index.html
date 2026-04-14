@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elementary Edge Classes</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:#f8fafc;}
+
+  /* ══════════════════════════════════════
+     ROLE SELECTION OVERLAY
+  ══════════════════════════════════════ */
+  #role-overlay{
+    position:fixed;inset:0;
+    background:rgba(15,23,42,0.75);
+    backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;
+    z-index:9999;
+    padding:24px;
+    animation:fadeIn 0.35s ease;
+  }
+  #role-overlay.hidden{display:none;}
+
+  .role-card{
+    background:#fff;
+    border-radius:20px;
+    padding:48px 40px;
+    max-width:560px;
+    width:100%;
+    text-align:center;
+    box-shadow:0 32px 80px rgba(0,0,0,0.25);
+    animation:slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .role-card .ee-logo-badge{
+    display:inline-block;
+    background:#eff6ff;
+    color:#1d4ed8;
+    border-radius:50px;
+    padding:5px 18px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    margin-bottom:20px;
+  }
+  .role-card h2{
+    font-family:'Syne',sans-serif;
+    font-size:clamp(22px,4vw,30px);
+    font-weight:800;
+    color:#111827;
+    margin-bottom:8px;
+    line-height:1.2;
+  }
+  .role-card p{
+    font-size:15px;
+    color:#6b7280;
+    margin-bottom:36px;
+    line-height:1.6;
+  }
+  .role-buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  @media(max-width:480px){.role-buttons{grid-template-columns:1fr;}}
+  .role-btn{
+    border:2px solid #e5e7eb;
+    border-radius:14px;
+    padding:28px 20px;
+    cursor:pointer;
+    background:#fff;
+    transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    font-family:'DM Sans',sans-serif;
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+  }
+  .role-btn:hover{transform:translateY(-4px);border-color:#1d4ed8;box-shadow:0 12px 32px rgba(29,78,216,0.15);}
+  .role-btn.teacher:hover{background:#eff6ff;}
+  .role-btn.student:hover{background:#f0fdf4;}
+  .role-btn.student{border-color:#e5e7eb;}
+  .role-btn .role-icon{font-size:42px;}
+  .role-btn .role-label{font-size:16px;font-weight:700;color:#111827;}
+  .role-btn .role-sub{font-size:12px;color:#6b7280;}
+
+  /* ══════════════════════════════════════
+     STUDENT DEMO POPUP
+  ══════════════════════════════════════ */
+  #demo-overlay{
+    position:fixed;inset:0;
+    background:rgba(15,23,42,0.75);
+    backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;
+    z-index:9999;
+    padding:24px;
+    overflow-y:auto;
+  }
+  #demo-overlay.active{display:flex;}
+
+  .demo-card{
+    background:#fff;
+    border-radius:20px;
+    padding:40px 36px;
+    max-width:700px;
+    width:100%;
+    position:relative;
+    box-shadow:0 32px 80px rgba(0,0,0,0.25);
+    animation:slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    margin:auto;
+  }
+  @media(max-width:600px){.demo-card{padding:28px 20px;}}
+  .demo-close{
+    position:absolute;top:18px;right:20px;
+    background:none;border:none;
+    font-size:22px;cursor:pointer;
+    color:#6b7280;line-height:1;
+    width:36px;height:36px;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:50%;
+    transition:background 0.15s,color 0.15s;
+  }
+  .demo-close:hover{background:#f3f4f6;color:#111827;}
+  .demo-card h2{
+    font-family:'Syne',sans-serif;
+    font-size:clamp(22px,4vw,28px);
+    font-weight:800;
+    color:#1d4ed8;
+    text-align:center;
+    margin-bottom:28px;
+  }
+  .demo-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  @media(max-width:560px){.demo-grid{grid-template-columns:1fr;}}
+  .demo-field{display:flex;flex-direction:column;gap:5px;}
+  .demo-field.full{grid-column:1/-1;}
+  .demo-field label{font-size:12px;font-weight:600;color:#374151;letter-spacing:0.4px;}
+  .demo-field input,
+  .demo-field select{
+    padding:11px 14px;
+    border:1.5px solid #e5e7eb;
+    border-radius:9px;
+    font-family:'DM Sans',sans-serif;
+    font-size:14px;
+    background:#f9fafb;
+    color:#111827;
+    outline:none;
+    transition:border-color 0.15s,box-shadow 0.15s;
+  }
+  .demo-field input:focus,
+  .demo-field select:focus{
+    border-color:#1d4ed8;
+    box-shadow:0 0 0 3px rgba(29,78,216,0.08);
+    background:#fff;
+  }
+  .demo-field input::placeholder{color:#9ca3af;}
+  .demo-submit-btn{
+    width:100%;
+    background:#1d4ed8;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:14px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:'DM Sans',sans-serif;
+    margin-top:20px;
+    transition:background 0.15s,transform 0.1s,box-shadow 0.15s;
+  }
+  .demo-submit-btn:hover{background:#1e40af;transform:translateY(-1px);box-shadow:0 8px 24px rgba(29,78,216,0.3);}
+  .demo-submit-btn:active{transform:translateY(0);}
+  .demo-success{
+    background:#f0fdf4;
+    border:1px solid #86efac;
+    border-radius:10px;
+    padding:20px;
+    text-align:center;
+    display:none;
+    margin-top:16px;
+  }
+  .demo-success p{color:#16a34a;font-weight:700;font-size:15px;}
+  .demo-success span{display:block;font-size:13px;color:#15803d;margin-top:4px;}
+
+  /* ── HERO ── */
+  .ee-hero{background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 60%,#2563eb 100%);padding:64px 24px 80px;text-align:center;position:relative;overflow:hidden;}
+  .ee-hero::before{content:'';position:absolute;top:-60px;left:-60px;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,0.05);}
+  .ee-hero::after{content:'';position:absolute;bottom:-80px;right:-40px;width:400px;height:400px;border-radius:50%;background:rgba(255,255,255,0.04);}
+  .ee-logo-text{display:inline-block;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:20px;}
+  .ee-title{font-family:'Syne',sans-serif;font-size:clamp(36px,7vw,68px);font-weight:800;color:#fff;line-height:1.1;margin-bottom:16px;position:relative;z-index:1;}
+  .ee-title span{color:#93c5fd;}
+  .ee-tagline{font-size:16px;color:rgba(255,255,255,0.85);max-width:480px;margin:0 auto 28px;line-height:1.7;position:relative;z-index:1;}
+  .ee-classes-pill{display:inline-block;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:50px;padding:10px 28px;color:#fff;font-size:15px;font-weight:500;margin-bottom:32px;}
+  .ee-contact-pill{display:inline-block;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:50px;padding:7px 20px;color:rgba(255,255,255,0.85);font-size:14px;margin-bottom:32px;margin-left:10px;}
+  .ee-btn-group{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  .ee-btn-primary{background:#fff;color:#1d4ed8;border:none;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:transform 0.15s,box-shadow 0.15s;}
+  .ee-btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.15);}
+  .ee-btn-outline{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,0.5);padding:14px 32px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;}
+  .ee-btn-outline:hover{background:rgba(255,255,255,0.1);}
+  .ee-btn-demo{background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.4);color:#fff;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;}
+  .ee-btn-demo:hover{background:rgba(255,255,255,0.25);}
+
+  /* ── WAVE ── */
+  .ee-wave{display:block;width:100%;height:60px;margin-top:-2px;}
+
+  /* ── SECTIONS ── */
+  .ee-section{padding:56px 24px;max-width:1000px;margin:0 auto;}
+  .ee-section-title{font-family:'Syne',sans-serif;font-size:clamp(22px,4vw,30px);font-weight:700;color:#111827;text-align:center;margin-bottom:8px;}
+  .ee-section-sub{text-align:center;color:#6b7280;font-size:15px;margin-bottom:40px;}
+
+  /* ── FEATURE CARDS ── */
+  .ee-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;}
+  .ee-card{background:#fff;border:0.5px solid #e5e7eb;border-radius:12px;padding:24px 20px;text-align:center;transition:transform 0.2s,box-shadow 0.2s;}
+  .ee-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,0.08);}
+  .ee-card-icon{font-size:32px;margin-bottom:12px;}
+  .ee-card h3{font-size:15px;font-weight:600;color:#111827;margin-bottom:6px;}
+  .ee-card p{font-size:13px;color:#6b7280;line-height:1.6;}
+
+  /* ── BOARDS ── */
+  .ee-boards{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:40px;}
+  .ee-board-badge{background:#1d4ed8;color:#fff;border-radius:8px;padding:12px 32px;font-size:17px;font-weight:700;letter-spacing:1px;}
+
+  /* ── CLASSES GRID ── */
+  .ee-classes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:10px;}
+  .ee-class-box{background:#fff;border:0.5px solid #e5e7eb;border-radius:10px;padding:14px 8px;text-align:center;font-size:13px;font-weight:500;color:#111827;transition:all 0.2s;cursor:default;}
+  .ee-class-box:hover{background:#1d4ed8;color:#fff;border-color:#1d4ed8;transform:scale(1.05);}
+  .ee-class-box.nursery{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;}
+
+  /* ── SUBJECTS ── */
+  .ee-subjects-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
+  .ee-subject-card{background:#fff;border:0.5px solid #e5e7eb;border-radius:12px;padding:20px 16px;}
+  .ee-subject-card h3{font-size:14px;font-weight:700;color:#1d4ed8;margin-bottom:8px;}
+  .ee-subject-tag{display:inline-block;background:#eff6ff;color:#1d4ed8;border-radius:20px;padding:3px 10px;font-size:12px;margin:2px;}
+
+  /* ── ABOUT ── */
+  .ee-about{background:#eff6ff;border-radius:16px;padding:40px 32px;border:0.5px solid #bfdbfe;}
+  .ee-about p{font-size:15px;color:#1e3a8a;line-height:1.8;margin-bottom:14px;}
+  .ee-about p:last-child{margin-bottom:0;}
+
+  /* ── QUOTE ── */
+  .ee-quote-strip{background:#1e3a8a;padding:48px 24px;text-align:center;}
+  .ee-quote{font-family:'Syne',sans-serif;font-size:clamp(18px,3vw,26px);font-weight:700;color:#fff;max-width:680px;margin:0 auto 12px;line-height:1.4;}
+  .ee-quote-attr{font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:1px;}
+
+  /* ── REGISTRATION FORM ── */
+  .ee-reg-wrap{background:#fff;border:0.5px solid #e5e7eb;border-radius:16px;padding:40px 32px;max-width:700px;margin:0 auto;}
+  .ee-reg-wrap h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:#111827;margin-bottom:6px;}
+  .ee-reg-wrap > p{color:#6b7280;font-size:14px;margin-bottom:28px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
+  .form-group{display:flex;flex-direction:column;gap:6px;}
+  .form-group.full{grid-column:1/-1;}
+  .form-group label{font-size:13px;font-weight:600;color:#374151;}
+  .form-group input,
+  .form-group select{
+    padding:10px 14px;
+    border:0.5px solid #d1d5db;
+    border-radius:8px;
+    font-family:'DM Sans',sans-serif;
+    font-size:14px;
+    background:#f9fafb;
+    color:#111827;
+    outline:none;
+    transition:border-color 0.15s;
+  }
+  .form-group input:focus,
+  .form-group select:focus{border-color:#1d4ed8;}
+
+  /* ── UPLOAD BOX ── */
+  .upload-box{border:1.5px dashed #d1d5db;border-radius:8px;padding:20px;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color 0.2s;}
+  .upload-box:hover{border-color:#1d4ed8;}
+  .upload-box input[type=file]{display:none;}
+  .upload-box .icon{font-size:28px;margin-bottom:6px;}
+  .upload-box p{font-size:13px;color:#6b7280;margin:0;}
+  .upload-box .hint{font-size:11px;color:#9ca3af;margin-top:4px;}
+  .upload-preview{font-size:12px;color:#16a34a;margin-top:6px;font-weight:600;}
+
+  /* ── SUBJECT & CLASS CHECKBOXES ── */
+  .subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
+  .subj-opt{display:flex;align-items:center;gap:8px;background:#f9fafb;border:0.5px solid #e5e7eb;border-radius:8px;padding:8px 12px;cursor:pointer;transition:all 0.15s;}
+  .subj-opt:hover{border-color:#1d4ed8;background:#eff6ff;}
+  .subj-opt input{accent-color:#1d4ed8;width:14px;height:14px;flex-shrink:0;}
+  .subj-opt label{font-size:13px;color:#111827;cursor:pointer;}
+
+  .cls-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;}
+  .cls-opt{display:flex;align-items:center;gap:6px;background:#f9fafb;border:0.5px solid #e5e7eb;border-radius:8px;padding:7px 10px;cursor:pointer;transition:all 0.15s;}
+  .cls-opt:hover{border-color:#1d4ed8;background:#eff6ff;}
+  .cls-opt input{accent-color:#1d4ed8;flex-shrink:0;}
+  .cls-opt label{font-size:12px;color:#111827;cursor:pointer;}
+
+  /* ── TERMS & CONDITIONS ── */
+  .tac-box{background:#f9fafb;border:0.5px solid #e5e7eb;border-radius:10px;padding:20px;margin-top:24px;}
+  .tac-box h4{font-size:14px;font-weight:700;color:#111827;margin-bottom:16px;padding-bottom:10px;border-bottom:0.5px solid #e5e7eb;}
+  .tac-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;}
+  .tac-item:last-of-type{margin-bottom:0;}
+  .tac-item input[type=checkbox]{accent-color:#1d4ed8;width:16px;height:16px;margin-top:3px;flex-shrink:0;cursor:pointer;}
+  .tac-item label{font-size:13px;color:#4b5563;line-height:1.7;cursor:pointer;}
+  .tac-item label strong{color:#111827;}
+  .tac-warn{background:#fef2f2;border:0.5px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:13px;color:#dc2626;margin-top:14px;display:none;}
+
+  /* ── SUBMIT BUTTON ── */
+  .reg-submit-btn{width:100%;background:#1d4ed8;color:#fff;border:none;border-radius:10px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:24px;transition:background 0.15s,transform 0.1s;}
+  .reg-submit-btn:hover{background:#1e40af;transform:translateY(-1px);}
+  .reg-submit-btn:active{transform:translateY(0);}
+
+  .success-msg{background:#f0fdf4;border:0.5px solid #86efac;border-radius:10px;padding:24px;text-align:center;display:none;margin-top:16px;}
+  .success-msg p{color:#16a34a;font-weight:600;font-size:15px;}
+  .success-msg span{display:block;font-size:13px;color:#15803d;margin-top:4px;}
+
+  /* ── FEEDBACK ── */
+  .ee-feedback-wrap{background:#fff;border:0.5px solid #e5e7eb;border-radius:16px;padding:32px;max-width:500px;margin:40px auto 0;}
+  .ee-feedback-wrap h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#111827;margin-bottom:20px;}
+  .fb-input{width:100%;padding:10px 14px;border:0.5px solid #d1d5db;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;background:#f9fafb;color:#111827;outline:none;margin-bottom:10px;transition:border-color 0.15s;}
+  .fb-input:focus{border-color:#1d4ed8;}
+  textarea.fb-input{resize:vertical;min-height:90px;}
+  .fb-btn{width:100%;background:#1d4ed8;color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;}
+  .fb-btn:hover{background:#1e40af;}
+  .feedback-item{background:#f9fafb;border:0.5px solid #e5e7eb;border-radius:8px;padding:12px 16px;margin-top:10px;}
+  .feedback-name{font-weight:600;font-size:13px;color:#111827;margin-bottom:4px;}
+  .feedback-msg{font-size:14px;color:#6b7280;}
+
+  /* ── FOOTER ── */
+  .ee-footer{background:#0f172a;padding:40px 24px;text-align:center;color:rgba(255,255,255,0.5);font-size:13px;margin-top:0;}
+  .ee-footer strong{color:rgba(255,255,255,0.9);font-size:16px;font-family:'Syne',sans-serif;}
+  .ee-footer .footer-links{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin:12px 0;}
+  .ee-footer .footer-links a{color:rgba(255,255,255,0.6);text-decoration:none;font-size:13px;}
+  .ee-footer .footer-links a:hover{color:#fff;}
+  .ee-footer .footer-bottom{margin-top:16px;font-size:12px;color:rgba(255,255,255,0.35);}
+
+  /* ── DIVIDER ── */
+  .divider{border:none;border-top:0.5px solid #e5e7eb;margin:32px 0;}
+
+  /* ── ANIMATIONS ── */
+  .animate-in{opacity:0;transform:translateY(24px);transition:opacity 0.55s ease,transform 0.55s ease;}
+  .animate-in.visible{opacity:1;transform:translateY(0);}
+
+  /* ── SECTION LABEL ── */
+  .section-label{display:inline-block;background:#eff6ff;color:#1d4ed8;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;}
+
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes slideUp{from{opacity:0;transform:translateY(32px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+</style>
+</head>
+<body>
+
+<!-- ════════════ ROLE SELECTION OVERLAY ════════════ -->
+<div id="role-overlay">
+  <div class="role-card">
+    <div class="ee-logo-badge">Elementary Edge Classes</div>
+    <h2>Welcome! Who are you?</h2>
+    <p>Tell us who you are so we can show you the right experience.</p>
+    <div class="role-buttons">
+      <button class="role-btn teacher" onclick="selectRole('teacher')">
+        <span class="role-icon">👨‍🏫</span>
+        <span class="role-label">I'm a Teacher</span>
+        <span class="role-sub">Register as a tutor</span>
+      </button>
+      <button class="role-btn student" onclick="selectRole('student')">
+        <span class="role-icon">🎓</span>
+        <span class="role-label">I'm a Student</span>
+        <span class="role-sub">Book a demo class</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ STUDENT DEMO BOOKING POPUP ════════════ -->
+<div id="demo-overlay">
+  <div class="demo-card">
+    <button class="demo-close" onclick="closeDemoPopup()" title="Close">&#10005;</button>
+    <h2>Book a Demo Class</h2>
+
+    <div class="demo-grid">
+
+      <div class="demo-field">
+        <label for="d-name">Student Name *</label>
+        <input type="text" id="d-name" placeholder="Student Name">
+      </div>
+
+      <div class="demo-field">
+        <label for="d-contact">Contact *</label>
+        <input type="tel" id="d-contact" placeholder="Contact" maxlength="10">
+      </div>
+
+      <div class="demo-field">
+        <label for="d-class">Class *</label>
+        <input type="text" id="d-class" placeholder="Class">
+      </div>
+
+      <div class="demo-field">
+        <label for="d-board">Board *</label>
+        <select id="d-board">
+          <option value="">Board</option>
+          <option value="CBSE">CBSE</option>
+          <option value="ICSE">ICSE</option>
+          <option value="UK Board">UK Board</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="demo-field">
+        <label for="d-subject1">Primary Subject *</label>
+        <input type="text" id="d-subject1" placeholder="Subject">
+      </div>
+
+      <div class="demo-field">
+        <label for="d-city">City *</label>
+        <input type="text" id="d-city" placeholder="City">
+      </div>
+
+      <div class="demo-field">
+        <label for="d-tutor-gender">Tutor Gender Preference</label>
+        <select id="d-tutor-gender">
+          <option value="">Tutor Gender Preference</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="No Preference">No Preference</option>
+        </select>
+      </div>
+
+      <div class="demo-field">
+        <label for="d-subject2">Secondary Subject</label>
+        <input type="text" id="d-subject2" placeholder="Subject">
+      </div>
+
+      <div class="demo-field">
+        <label for="d-email">Email</label>
+        <input type="email" id="d-email" placeholder="Email">
+      </div>
+
+      <div class="demo-field">
+        <label for="d-address">Address</label>
+        <input type="text" id="d-address" placeholder="Address">
+      </div>
+
+    </div><!-- /demo-grid -->
+
+    <button class="demo-submit-btn" onclick="submitDemoBooking()">Submit</button>
+
+    <div class="demo-success" id="demo-success">
+      <p>🎉 Demo class booked successfully!</p>
+      <span>We will contact you shortly on your provided number to confirm your session.</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════ HERO ════════════ -->
+<div class="ee-hero">
+  <div class="ee-logo-text">Elementary Edge Classes</div>
+  <h1 class="ee-title">Learn <span>Smarter</span><br>with Elementary Edge</h1>
+  <p class="ee-tagline">Simple, effective, and accessible learning for every student — at home or online.</p>
+  <div>
+    <div class="ee-classes-pill">Nursery to Class 12 &nbsp;|&nbsp; Home Tuition &amp; Online Classes</div>
+  </div>
+  <div>
+    <div class="ee-contact-pill">&#128222; 6398636846 &nbsp;&nbsp; &#9993; elementaryedge@gmail.com</div>
+  </div>
+  <div class="ee-btn-group">
+    <button class="ee-btn-primary" onclick="document.getElementById('register').scrollIntoView({behavior:'smooth'})">Register as Tutor</button>
+    <button class="ee-btn-demo" onclick="openDemoPopup()">📚 Book a Demo Class</button>
+    <button class="ee-btn-outline" onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})">Learn More</button>
+  </div>
+</div>
+
+<svg class="ee-wave" viewBox="0 0 1200 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="background:#1e3a8a;">
+  <path d="M0,40 C200,80 400,0 600,40 C800,80 1000,10 1200,40 L1200,60 L0,60 Z" fill="#f8fafc"/>
+</svg>
+
+<!-- ════════════ WHY US ════════════ -->
+<div class="ee-section animate-in">
+  <div style="text-align:center;"><span class="section-label">Our Strengths</span></div>
+  <h2 class="ee-section-title">Why Elementary Edge?</h2>
+  <p class="ee-section-sub">Young, experienced tutors who make every concept click</p>
+  <div class="ee-cards">
+    <div class="ee-card">
+      <div class="ee-card-icon">&#128104;&#8205;&#127979;</div>
+      <h3>Young &amp; Energetic Tutors</h3>
+      <p>College students, graduates &amp; postgrads with 2–4 years of teaching experience</p>
+    </div>
+    <div class="ee-card">
+      <div class="ee-card-icon">&#128214;</div>
+      <h3>Easy Concept Explanation</h3>
+      <p>Close to the latest syllabus, our tutors explain in a simple and relatable way</p>
+    </div>
+    <div class="ee-card">
+      <div class="ee-card-icon">&#127968;</div>
+      <h3>Home Tuition Available</h3>
+      <p>Personalized attention in the comfort of your own home</p>
+    </div>
+    <div class="ee-card">
+      <div class="ee-card-icon">&#128187;</div>
+      <h3>Online Classes</h3>
+      <p>Learn from anywhere with flexible, live online sessions</p>
+    </div>
+    <div class="ee-card">
+      <div class="ee-card-icon">&#128221;</div>
+      <h3>Weekly Tests</h3>
+      <p>Regular assessments to track progress and reinforce learning</p>
+    </div>
+    <div class="ee-card">
+      <div class="ee-card-icon">&#128101;</div>
+      <h3>Small Batch Size</h3>
+      <p>Focused, personal attention for every student with limited batch sizes</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ BOARDS & CLASSES ════════════ -->
+<div class="ee-section animate-in">
+  <div style="text-align:center;"><span class="section-label">Boards</span></div>
+  <h2 class="ee-section-title">Boards We Cover</h2>
+  <p class="ee-section-sub">Comprehensive preparation for all major boards</p>
+  <div class="ee-boards">
+    <div class="ee-board-badge">ICSE</div>
+    <div class="ee-board-badge">CBSE</div>
+    <div class="ee-board-badge">UK Board</div>
+  </div>
+
+  <div style="text-align:center;"><span class="section-label">Classes</span></div>
+  <h2 class="ee-section-title">Classes Available</h2>
+  <p class="ee-section-sub">Nursery to Class 12 — with subjects tailored per level</p>
+  <div class="ee-classes-grid">
+    <div class="ee-class-box nursery">Nursery</div>
+    <div class="ee-class-box nursery">KG</div>
+    <div class="ee-class-box">Class 1</div>
+    <div class="ee-class-box">Class 2</div>
+    <div class="ee-class-box">Class 3</div>
+    <div class="ee-class-box">Class 4</div>
+    <div class="ee-class-box">Class 5</div>
+    <div class="ee-class-box">Class 6</div>
+    <div class="ee-class-box">Class 7</div>
+    <div class="ee-class-box">Class 8</div>
+    <div class="ee-class-box">Class 9</div>
+    <div class="ee-class-box">Class 10</div>
+    <div class="ee-class-box">Class 11</div>
+    <div class="ee-class-box">Class 12</div>
+  </div>
+</div>
+
+<!-- ════════════ SUBJECTS ════════════ -->
+<div class="ee-section animate-in">
+  <div style="text-align:center;"><span class="section-label">Subjects</span></div>
+  <h2 class="ee-section-title">Subjects We Teach</h2>
+  <p class="ee-section-sub">Subject-focused guidance, tailored level by level</p>
+  <div class="ee-subjects-grid">
+    <div class="ee-subject-card">
+      <h3>Classes 2nd to 8th</h3>
+      <span class="ee-subject-tag">All Subjects</span>
+    </div>
+    <div class="ee-subject-card">
+      <h3>Classes 9th &amp; 10th</h3>
+      <span class="ee-subject-tag">Mathematics</span>
+      <span class="ee-subject-tag">Science</span>
+      <span class="ee-subject-tag">Social Science</span>
+    </div>
+    <div class="ee-subject-card">
+      <h3>Classes 11th &amp; 12th</h3>
+      <span class="ee-subject-tag">Mathematics</span>
+      <span class="ee-subject-tag">Biology</span>
+      <span class="ee-subject-tag">Chemistry</span>
+      <span class="ee-subject-tag">Economics</span>
+    </div>
+    <div class="ee-subject-card">
+      <h3>All Classes</h3>
+      <span class="ee-subject-tag">English</span>
+      <span class="ee-subject-tag">Physics</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ ABOUT ════════════ -->
+<div class="ee-section animate-in" id="about">
+  <div style="text-align:center;"><span class="section-label">About Us</span></div>
+  <h2 class="ee-section-title">About Elementary Edge</h2>
+  <p class="ee-section-sub">Our mission, in our own words</p>
+  <div class="ee-about">
+    <p>Elementary Edge is dedicated to making learning simple, effective, and accessible for students from Nursery to Class 12. We provide both home tuition and online classes, designed to give personalized attention to every student.</p>
+    <p>Our tutors are college students, graduates, and postgraduate learners who bring 2–4 years of teaching experience. Being close to the latest syllabus and exam patterns, they understand student needs better and explain concepts in a simple and relatable way.</p>
+    <p>We offer subject-focused guidance in English, Mathematics, Physics, and Chemistry, helping students improve their understanding, confidence, and academic performance.</p>
+    <p>At Elementary Edge, we believe the right guidance should come to you. Whether at home or online, we ensure a comfortable and supportive learning environment for every child.</p>
+  </div>
+</div>
+
+<!-- ════════════ QUOTE ════════════ -->
+<div class="ee-quote-strip">
+  <p class="ee-quote">"The beautiful thing about learning is that no one can take it away from you."</p>
+  <p class="ee-quote-attr">— B.B. King</p>
+</div>
+
+<!-- ════════════ REGISTRATION ════════════ -->
+<div class="ee-section animate-in" id="register">
+  <div style="text-align:center;"><span class="section-label">Join Us</span></div>
+  <h2 class="ee-section-title">Tutor Registration</h2>
+  <p class="ee-section-sub">Join the Elementary Edge family — fill in your details below</p>
+
+  <div class="ee-reg-wrap">
+    <h2>Personal Details</h2>
+    <p>All fields are mandatory. Please ensure your information is accurate before submitting.</p>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label for="r-name">Full Name *</label>
+        <input type="text" id="r-name" placeholder="Enter your full name">
+      </div>
+
+      <div class="form-group">
+        <label for="r-gender">Gender *</label>
+        <select id="r-gender">
+          <option value="">Select gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+          <option value="Prefer not to say">Prefer not to say</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="r-phone">Phone Number *</label>
+        <input type="tel" id="r-phone" placeholder="10-digit mobile number" maxlength="10">
+      </div>
+
+      <div class="form-group">
+        <label for="r-email">Email Address *</label>
+        <input type="email" id="r-email" placeholder="your@email.com">
+      </div>
+
+      <div class="form-group full">
+        <label for="r-qual">Highest Qualification *</label>
+        <select id="r-qual">
+          <option value="">Select qualification</option>
+          <option value="Currently Pursuing Graduation">Currently Pursuing Graduation</option>
+          <option value="Graduate (B.A / B.Sc / B.Com / B.Tech)">Graduate (B.A / B.Sc / B.Com / B.Tech)</option>
+          <option value="Currently Pursuing Post-Graduation">Currently Pursuing Post-Graduation</option>
+          <option value="Post-Graduate (M.A / M.Sc / M.Com / M.Tech)">Post-Graduate (M.A / M.Sc / M.Com / M.Tech)</option>
+          <option value="B.Ed / D.Ed">B.Ed / D.Ed</option>
+          <option value="Ph.D">Ph.D</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <!-- Subjects -->
+      <div class="form-group full subjects-check">
+        <label>Subjects You Can Teach *</label>
+        <div class="subj-grid" style="margin-top:6px;">
+          <div class="subj-opt"><input type="checkbox" id="s1" value="English"><label for="s1">English</label></div>
+          <div class="subj-opt"><input type="checkbox" id="s2" value="Mathematics"><label for="s2">Mathematics</label></div>
+          <div class="subj-opt"><input type="checkbox" id="s3" value="Science"><label for="s3">Science</label></div>
+          <div class="subj-opt"><input type="checkbox" id="s4" value="Social Science"><label for="s4">Social Science</label></div>
+          <div class="subj-opt"><input type="checkbox" id="s5" value="Physics"><label for="s5">Physics</label></div>
+          <div class="subj-opt"><input type="checkbox" id="s6" value="Chemistry"><label for="s6">Chemistry</label></div>
+          <div class="subj-opt"><input type="checkbox" id="s7" value="Biology"><label for="s7">Biology</label></div>
+          <div class="subj-opt"><input type="checkbox" id="s8" value="Economics"><label for="s8">Economics</label></div>
+          <div class="subj-opt"><input type="checkbox" id="s9" value="All Subjects"><label for="s9">All Subjects</label></div>
+        </div>
+      </div>
+
+      <!-- Classes -->
+      <div class="form-group full classes-check">
+        <label>Classes You Can Teach *</label>
+        <div class="cls-grid" style="margin-top:6px;">
+          <div class="cls-opt"><input type="checkbox" id="c0" value="Nursery"><label for="c0">Nursery</label></div>
+          <div class="cls-opt"><input type="checkbox" id="ckg" value="KG"><label for="ckg">KG</label></div>
+          <div class="cls-opt"><input type="checkbox" id="c1" value="Class 1"><label for="c1">Class 1</label></div>
+          <div class="cls-opt"><input type="checkbox" id="c2" value="Class 2"><label for="c2">Class 2</label></div>
+          <div class="cls-opt"><input type="checkbox" id="c3" value="Class 3"><label for="c3">Class 3</label></div>
+          <div class="cls-opt"><input type="checkbox" id="c4" value="Class 4"><label for="c4">Class 4</label></div>
+          <div class="cls-opt"><input type="checkbox" id="c5" value="Class 5"><label for="c5">Class 5</label></div>
+          <div class="cls-opt"><input type="checkbox" id="c6" value="Class 6"><label for="c6">Class 6</label></div>
+          <div class="cls-opt"><input type="checkbox" id="c7" value="Class 7"><label for="c7">Class 7</label></div>
+          <div class="cls-opt"><input type="checkbox" id="c8" value="Class 8"><label for="c8">Class 8</label></div>
+          <div class="cls-opt"><input type="checkbox" id="c9" value="Class 9"><label for="c9">Class 9</label></div>
+          <div class="cls-opt"><input type="checkbox" id="c10" value="Class 10"><label for="c10">Class 10</label></div>
+          <div class="cls-opt"><input type="checkbox" id="c11" value="Class 11"><label for="c11">Class 11</label></div>
+          <div class="cls-opt"><input type="checkbox" id="c12" value="Class 12"><label for="c12">Class 12</label></div>
+        </div>
+      </div>
+
+      <!-- Aadhaar Front -->
+      <div class="form-group full">
+        <label>Aadhaar Card — Front Side *</label>
+        <div class="upload-box" onclick="document.getElementById('aadhar-front').click()">
+          <div class="icon">&#128219;</div>
+          <p>Click to upload front side of Aadhaar card</p>
+          <p class="hint">Accepted formats: JPG, PNG, PDF &nbsp;|&nbsp; Max size: 5MB</p>
+          <input type="file" id="aadhar-front" accept="image/jpeg,image/png,image/webp,application/pdf"
+            onchange="showPreview(this,'prev-front')">
+          <div class="upload-preview" id="prev-front"></div>
+        </div>
+      </div>
+
+      <!-- Aadhaar Back -->
+      <div class="form-group full">
+        <label>Aadhaar Card — Back Side *</label>
+        <div class="upload-box" onclick="document.getElementById('aadhar-back').click()">
+          <div class="icon">&#128219;</div>
+          <p>Click to upload back side of Aadhaar card</p>
+          <p class="hint">Accepted formats: JPG, PNG, PDF &nbsp;|&nbsp; Max size: 5MB</p>
+          <input type="file" id="aadhar-back" accept="image/jpeg,image/png,image/webp,application/pdf"
+            onchange="showPreview(this,'prev-back')">
+          <div class="upload-preview" id="prev-back"></div>
+        </div>
+      </div>
+
+    </div><!-- /form-grid -->
+
+    <!-- Terms & Conditions -->
+    <div class="tac-box">
+      <h4>Terms &amp; Conditions — Please read and accept all to complete registration</h4>
+
+      <div class="tac-item">
+        <input type="checkbox" id="t1">
+        <label for="t1">
+          <strong>Fee Sharing:</strong> The institution shall claim 40% of the total fee amount agreed with the client in the first month, followed by a 10% charge for each subsequent month.
+        </label>
+      </div>
+
+      <div class="tac-item">
+        <input type="checkbox" id="t2">
+        <label for="t2">
+          <strong>No Direct Negotiation:</strong> If a tutor self-negotiates with the client without informing the institution and receives the full fee amount, legal action shall be taken against them.
+        </label>
+      </div>
+
+      <div class="tac-item">
+        <input type="checkbox" id="t3">
+        <label for="t3">
+          <strong>Accuracy of Information:</strong> The tutor is required to provide assurance that the above-mentioned details are correct to the best of their knowledge.
+        </label>
+      </div>
+
+      <div class="tac-item">
+        <input type="checkbox" id="t4">
+        <label for="t4">
+          <strong>Commitment to Attendance:</strong> After mutual approval between the tutor and client, if the tutor fails to visit the client without informing the institution, the tutor shall not be entertained further. Additionally, they shall be liable to pay the entire first month's fee as compensation for the loss of reputation of the institution.
+        </label>
+      </div>
+
+      <div class="tac-warn" id="tac-warn">
+        &#9888; Please accept all Terms &amp; Conditions before submitting your registration.
+      </div>
+    </div>
+
+    <button class="reg-submit-btn" onclick="submitRegister()">Submit Registration</button>
+
+    <div class="success-msg" id="reg-success">
+      <p>&#10004; Registration submitted successfully!</p>
+      <span>We will review your details and contact you shortly on your registered phone number.</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Feedback -->
+  <div class="ee-feedback-wrap animate-in">
+    <h3>Student Feedback</h3>
+    <input class="fb-input" type="text" id="f-name" placeholder="Your Name">
+    <textarea class="fb-input" id="f-message" placeholder="Share your experience with Elementary Edge..."></textarea>
+    <button class="fb-btn" onclick="submitFeedback()">Submit Feedback</button>
+    <div id="feedbackList"></div>
+  </div>
+
+</div><!-- /ee-section -->
+
+<!-- ════════════ FOOTER ════════════ -->
+<div class="ee-footer">
+  <strong>Elementary Edge Classes</strong>
+  <div class="footer-links">
+    <a href="mailto:elementaryedge@gmail.com">elementaryedge@gmail.com</a>
+    <a href="tel:6398636846">6398636846</a>
+    <a href="#register">Register as Tutor</a>
+    <a href="#about">About Us</a>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2025 Elementary Edge Classes. All rights reserved.
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
