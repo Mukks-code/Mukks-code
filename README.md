@@ -23,7 +23,7 @@
 ```yaml
 name        : Mukesh Puri
 alias       : Mukks-code
-location    : Delhi, India 🇮🇳
+location    : Dehradun, India 🇮🇳
 education   : Bsc Information Technology Student @ Shri Guru Ram Rai University
 email       : mpuri2825@gmail.com
 linkedin    : linkedin.com/in/mukesh-puri-086323343
@@ -32,7 +32,7 @@ status      : Open to exciting opportunities 🔓
 
 > 💡 *"Any fool can write code that a computer can understand. Good programmers write code that humans can understand."* — Martin Fowler
 
-I'm **Mukesh Puri**, a passionate developer and CS student who loves turning ideas into reality through clean, efficient code. I enjoy solving complex problems, contributing to open-source projects, and continuously leveling up my skills. When I'm not coding, I'm exploring new technologies or collaborating on interesting projects.
+I'm **Mukesh Puri**, a passionate developer and IT student who loves turning ideas into reality through clean, efficient code. I enjoy solving complex problems, contributing to open-source projects, and continuously leveling up my skills. When I'm not coding, I'm exploring new technologies or collaborating on interesting projects.
 
 - 🎓 Currently pursuing my degree at **Shri Guru Ram Rai University, Dehradun**
 - 🔭 Working on **exciting full-stack projects**
@@ -141,7 +141,6 @@ I'm **Mukesh Puri**, a passionate developer and CS student who loves turning ide
 💼 Experience
    └── Full-Stack Developer (Projects & Freelance)
        ├── Developed and deployed web applications end-to-end
-       ├── Worked with REST APIs and third-party integrations
        ├── Collaborated using Git workflows and Agile methodologies
        └── Focused on performance, scalability, and clean code
 
